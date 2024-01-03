@@ -16,28 +16,9 @@ public class GameManager : MonoBehaviour
         startPositions = new List<Vector2>();
         
         foreach(var item in pieces)
-        {
             startPositions.Add(item.transform.position);
-        }
 
-
-        for(int i = 0; i < shuffleCount; i++)
-        {
-            List<GameObject> movablePieces = new List<GameObject>();
-            foreach (var item in pieces)
-            {
-                if (GetEmptyPiece(item) != null)
-                {
-                    movablePieces.Add(item);
-                }
-            }
-
-            //隣接するピースとランダムで入れ替える
-            int rnd = Random.Range(0, movablePieces.Count);
-            GameObject piece = movablePieces[rnd];
-            SwapPiece(piece, pieces[0]);
-        }
-
+        ShufflePieces();
         buttonRetry.SetActive( false );
     }
 
@@ -47,37 +28,60 @@ public class GameManager : MonoBehaviour
         //タッチ処理
         if (Input.GetMouseButtonUp(0))
         {
-            Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            RaycastHit2D hit2d = Physics2D.Raycast(worldPoint, Vector2.zero);
+            HandleInput();
+            CheckForWin();
+        }
+    }
 
-            //レイを飛ばして、動かすべきオブジェクトを取得
-            if (hit2d)
+
+    /// <summary>
+    /// ピースをシャッフルする処理
+    /// </summary>
+    private void ShufflePieces()
+    {
+        for(int i = 0; i < shuffleCount; i++)
+        {
+            List<GameObject> movablePieces = pieces.FindAll(item => GetEmptyPiece(item) != null);
+            int rnd = Random.Range(0 , movablePieces.Count);
+            SwapPiece(movablePieces[rnd] , pieces[0]);
+        }
+    }
+
+
+    /// <summary>
+    /// 入力処理
+    /// </summary>
+    private void HandleInput()
+    {
+        Vector2 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        RaycastHit2D hit2d = Physics2D.Raycast(worldPosition, Vector2.zero);
+
+        if (hit2d)
+        {
+            SwapPiece(hit2d.collider.gameObject, GetEmptyPiece(hit2d.collider.gameObject));
+        }
+    }
+
+
+    /// <summary>
+    /// 勝った時のメッセージを出す
+    /// </summary>
+    private void CheckForWin()
+    {
+        bool allPiecesInCorrentPosition = true;
+
+        for (int i = 0; i < pieces.Count; i++)
+        {
+            if ((Vector2)pieces[i].transform.position != startPositions[i])
             {
-                GameObject hitPiece   = hit2d.collider.gameObject;
-                GameObject emptyPiece = GetEmptyPiece(hitPiece);
-                SwapPiece(hitPiece, emptyPiece);
-
-                //クリア判定
-                buttonRetry.SetActive( true );
-
-                for(int i = 0; i < pieces.Count; i++)
-                {
-                    Vector2 position = pieces[i].transform.position;
-
-                    if(position != startPositions[i])
-                    {
-                        buttonRetry.SetActive( false );
-                    }
-                }
-
-                //クリア状態
-                if(buttonRetry.activeSelf)
-                {
-                    Debug.Log("クリア！！");
-                }
-
+                allPiecesInCorrentPosition = false;
+                break;
             }
         }
+        buttonRetry.SetActive(allPiecesInCorrentPosition);
+
+        if (buttonRetry.activeSelf)
+            Debug.Log("クリア");
     }
 
 

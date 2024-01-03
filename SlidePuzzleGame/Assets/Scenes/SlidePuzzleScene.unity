@@ -2594,7 +2594,7 @@ MonoBehaviour:
   - {fileID: 856592468}
   - {fileID: 646482317}
   buttonRetry: {fileID: 385521371}
-  shuffleCount: 100
+  shuffleCount: 20
 --- !u!4 &2072143315
 Transform:
   m_ObjectHideFlags: 0
